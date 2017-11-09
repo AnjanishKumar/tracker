@@ -37,6 +37,17 @@ app.use(bodyParser.json());
 app.get('/', function(req, res) {
     res.json({msg: 'Hello World'});
 });
+app.post('/register', function(req, res) {
+    res.json({
+        access_key: 'blabla',
+        refresh_token: 'balbalbal',
+        user: {
+            fname: 'anjanish',
+            lname: 'kumar',
+            email: 'anjanishvikas@gmail.com',
+        },
+    });
+});
 
 app.listen(PORT, function() {
     let uri = URL + ( PORT ? (':' + PORT) :'');
