@@ -9,29 +9,35 @@
  * Module dependencies
  * @private
  */
-
-const Winston = require('winston');
+const config = require('./config');
+const winston = require('winston');
 
 /**
  * Module variables
  * @private
  */
 
-const level = process.env.LOG_LEVEL || 'debug';
+let transports = [];
+
+
+/**
+ * Console transporter
+ */
+transports.push(new winston.transports.Console({
+    level: config.logging.console.level,
+    colorize: true,
+    prettyPrint: true,
+    handleExceptions: config.isDevMode(),
+}));
 
 /**
  * Initialize the application logger using given config
  */
-const logger = new Winston.Logger({
-    transports: [
-        new Winston.transports.Console({
-            level: level,
-            timestamp: function() {
-                return (new Date()).toISOString();
-            },
-        }),
-    ],
- });
+let logger = new winston.Logger({
+    level: config.logging.level,
+    transports: transports,
+    exitOnError: false,
+});
 
 /**
  * Module exports

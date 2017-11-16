@@ -4,19 +4,14 @@
     <v-flex xs10 offset-xs1>
       <div class="white elevation-2">
         <v-toolbar class="cyan" flat dense dark>
-          <v-toolbar-title>Register</v-toolbar-title>
+          <v-toolbar-title>Login</v-toolbar-title>
         </v-toolbar>
         <div class="pl-4 pr-4 pt-2 pb-2">
-          <v-alert v-if="error" outline color="error" icon="warning" :value="true">
-            {{error}}
-          </v-alert>
           <!-- TODO: fix the lazy validation issue-->
           <v-form v-model="valid" ref="form" lazy-validation>
             <v-text-field
               name="email"
               label="Email"
-              autocomplete="off"
-              hint="Enter your email address"
               v-model="email"
               :rules="rules.email"
               required
@@ -25,8 +20,6 @@
             <v-text-field
               name="password"
               label="Password"
-              autocomplete="off"
-              hint="Enter password"
               v-model="password"
               :rules="rules.password"
               min="8"
@@ -35,24 +28,12 @@
               :type="showPassword ? 'text' : 'password'"
               required
             ></v-text-field>
-
-            <v-text-field
-              name="confirmPassword"
-              label="Confirm Password"
-              autocomplete="off"
-              v-model="confirmPassword"
-              :rules="rules.confirmPassword"
-              :append-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
-              :append-icon-cb="() => (showConfirmPassword = !showConfirmPassword)"
-              :type="showConfirmPassword ? 'text' : 'password'"
-              required
-            ></v-text-field>
             <v-btn
-              class="cyan"
-              @click="register"
+              @click="login"
               :disabled="!valid"
+
             >
-              submit
+              Login
             </v-btn>
             <div v-html="error"></div>
           </v-form>
@@ -66,17 +47,15 @@
 <script>
   import AuthenticationService from '@/services/AuthenticationService';
   export default {
-    name: 'Register',
+    name: 'Login',
     data() {
       return {
         email: '',
         password: '',
-        confirmPassword: '',
         valid: false,
         loading: false,
         error: null,
         showPassword: false,
-        showConfirmPassword: false,
         rules: {
           email: [
             (value) => !!value || 'Email is required.',
@@ -88,54 +67,43 @@
           ],
           password: [
             (value) => !!value || 'Please enter Password',
-            (value) => {
-              return value.length >= 8 ||
-                'Password must be at least 8 character long.';
-            },
-          ],
-          confirmPassword: [
-            (value) => !!value || 'Password Confirmation is required',
-            (value) => {
-              return value === this.password ||
-                'Password confirmation don\'t match';
-            },
           ],
         },
       };
     },
 
     methods: {
-      async register() {
+      async login() {
         if (this.$refs.form.validate()) {
           this.loading = true;
           this.valid = false;
-          this.error=null;
 
           try {
-            const res = await AuthenticationService.register({
+            const res = await AuthenticationService.login({
               email: this.email,
               password: this.password,
-              confirmPassword: this.confirmPassword,
             });
 
             this.valid = true;
             this.loading = false;
-            this.error = res.data;
-            // TODO: display next step after registration is successful
-            console.log(res, res.data);
+            this.$store.dispatch('setToken', res.data.token);
+            this.$store.dispatch('setUser', res.data.user);
+            console.log(res);
+            // TODO: save the session detail in session store
+            this.$router.push({name: 'home'});
           } catch (err) {
             this.loading = false;
+            this.valid = true;
             let errorType = err.response.status;
-
-            if (errorType === 400 || errorType === 422) {
+            if (errorType === 400 || errorType === 422
+              || errorType === 403) {
               let data = err.response.data;
-              data.error.details.forEach((error) => {
-                // hack to display server validation error
-                this.rules[error.key].push(() => error.message);
-                this.$refs.form.validate();
-                this.rules[error.key].pop();
-              });
+              // hack to display server error
+              this.rules.email.push(() => data.error.message);
+              this.$refs.form.validate();
+              this.rules.email.pop();
             } else {
+              // TODO: display other error message properly
               this.error = err.response.data.error.message;
             }
           }
@@ -143,6 +111,8 @@
       },
     },
     mounted() {
+      // TODO: if user is already logged in redirect to home page
+      // or intended url
       console.log(this.$options.name, ' mounted');
     },
   };
@@ -150,7 +120,4 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.error{
-  color: #f00;
-}
 </style>

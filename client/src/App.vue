@@ -1,14 +1,25 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <router-view/>
+    <v-app>
+      <page-header/>
+      <main>
+        <v-container fluid>
+          <!--<img src="./assets/logo.png">-->
+          <router-view/>
+        </v-container>
+      </main>
+    </v-app>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'app',
-};
+  import PageHeader from './components/header/Header.vue';
+  export default {
+    name: 'app',
+    components: {
+      PageHeader,
+    },
+  };
 </script>
 
 <style>
@@ -19,5 +30,8 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+.error--text{
+  color: #ff6161;
 }
 </style>

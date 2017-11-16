@@ -3,53 +3,27 @@
  * MIT Licensed
  */
 
-const express = require('express');
-const morgan = require('morgan');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+/**
+ * Module dependencies
+ * @private
+ */
+const config = require('./config');
 const logger = require('./logger');
+const db = require('./db')();
+const app = require('./server')(db);
 
-const URL = process.env.APP_URL || 'http://localhost';
-const PORT = process.env.PORT || 8081;
-const app = express();
+require('./init');
+require('./libs/gracefulExit');
 
-const errorLogMiddleware = morgan('dev', {
-    skip: function(req, res) {
-        return res.statusCode >=400;
-    },
-    stream: process.stderr,
-});
-
-const outLogMiddleware = morgan('combined', {
-    skip: function(req, res) {
-        return res.statusCode < 400;
-    },
-    stream: process.stdout,
-});
-
-app.use(errorLogMiddleware);
-app.use(outLogMiddleware);
-
-app.use(cors());
-app.use(bodyParser.json());
-
-
-app.get('/', function(req, res) {
-    res.json({msg: 'Hello World'});
-});
-app.post('/register', function(req, res) {
-    res.json({
-        access_key: 'blabla',
-        refresh_token: 'balbalbal',
-        user: {
-            fname: 'anjanish',
-            lname: 'kumar',
-            email: 'anjanishvikas@gmail.com',
-        },
-    });
-});
-
-app.listen(PORT, function() {
-    let uri = URL + ( PORT ? (':' + PORT) :'');
-    logger.info('> Listening at ' + uri + '\n');
+app.listen(config.app.port, function() {
+    logger.info();
+    logger.info(config.app.name + ' v' + config.app.version +
+        ' application started!');
+    logger.info('----------------------------------------------');
+    logger.info('Environment:\t' + config.app.env);
+    logger.info('Port:\t\t' + config.app.port);
+    logger.info('Database:\t\t' + config.db.uri);
+    logger.info('Redis:\t\t' +
+        (config.redis.enabled ? config.redis.uri : 'Disabled'));
+    logger.info('');
 });

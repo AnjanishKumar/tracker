@@ -14,7 +14,7 @@ export default {
 
     methods: {
         register() {
-            console.log('Register button was clicked.')
+            console.log('Register button was clicked.');
         },
     },
 
@@ -26,7 +26,7 @@ export default {
         setTimeout(() => {
             console.log('Register component mounted');
         }, 0);
-    }
+    },
 };
 </script>
 
